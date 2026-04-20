@@ -1,16 +1,18 @@
-import numpy as np
-import cv2
-from src.onnx_backend import ONNXBackend
-from src.detections import Detections
 import json
+
+import cv2
+import numpy as np
+
+from src.detections import Detections
+from src.onnx_backend import ONNXBackend
 
 
 class YOLO11:
     def __init__(
         self,
-        model_path: str,
+        model_path: str = "models/yolo11n.onnx",
         class_names_path: str = "src/yolo11_class_names.json",
-        conf_threshold: float = 0.5,
+        conf_threshold: float = 0.3,
         nms_threshold: float = 0.5,
         filter_classes: list = None,
     ):
@@ -23,6 +25,7 @@ class YOLO11:
             raw_dict = json.load(f)
         # Convert string keys to int keys
         self.class_names = {int(k): v for k, v in raw_dict.items()}
+        self.class_name_to_id = {v: k for k, v in self.class_names.items()}
 
     def __call__(self, input_data: np.ndarray, original_shapes: list[tuple]) -> list[Detections]:
         """
@@ -76,7 +79,20 @@ class YOLO11:
     def _class_filter(self, detections: list) -> list:
         if not self.filter_classes:
             return detections
-        return [d for d in detections if int(d[4]) in self.filter_classes]
+
+        all_strings = all(isinstance(f, str) for f in self.filter_classes)
+        all_ints = all(isinstance(f, int) for f in self.filter_classes)
+
+        if all_strings:
+            target_ids = {
+                self.class_name_to_id[f] for f in self.filter_classes if f in self.class_name_to_id
+            }
+        elif all_ints:
+            target_ids = set(self.filter_classes)
+        else:
+            raise ValueError("filter_classes must be all integers or all strings, not mixed.")
+
+        return [d for d in detections if int(d[4]) in target_ids]
 
     def _nms(self, detections: list) -> list:
         if not detections:

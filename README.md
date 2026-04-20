@@ -35,3 +35,11 @@ pip install -e ".[dev]"  # optional, for testing/linting
 ```bash
 python scripts/export.py
 ```
+
+### 5. Run the FastAPI server
+```bash
+uvicorn main:app --reload
+```
+
+## Demo
+![Detection results](screenshots/demo.png)
