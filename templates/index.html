@@ -4,8 +4,20 @@
     <title>Computer Vision Platform - Object Detection</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative; }
         h1 { text-align: center; }
+        .history-link {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .history-link:hover { background: #218838; }
         .upload-area {
             display: flex;
             flex-direction: column;
@@ -71,6 +83,7 @@
 </head>
 <body>
 <div class="container">
+    <a href="/history" class="history-link">📜 View History</a>
     <h1>YOLO11 Object Detection</h1>
     <div class="upload-area">
         <div class="file-input-wrapper">

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detection History</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        a { text-decoration: none; color: #007bff; }
+        .back-link { display: inline-block; margin-bottom: 20px; }
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .clear-btn:hover { background: #c82333; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Detection History</h1>
+    <div>
+        <a href="/" class="back-link">← Back to detection page</a>
+        <button class="clear-btn" onclick="clearHistory()">🗑️ Clear History</button>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Filename</th>
+                <th>Timestamp</th>
+                <th>Detections</th>
+                <th>Confidence</th>
+                <th>NMS</th>
+                <th>Filter Classes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in records %}
+            <tr>
+                <td>{{ record.id }}</td>
+                <td>{{ record.filename }}</td>
+                <td>{{ record.timestamp }}</td>
+                <td>{{ record.num_detections }}</td>
+                <td>{{ record.conf_threshold }}</td>
+                <td>{{ record.nms_threshold }}</td>
+                <td>{{ record.filter_classes or 'All' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if not records %}
+    <p>No detection records found.</p>
+    {% endif %}
+</div>
+
+<script>
+    async function clearHistory() {
+        if (!confirm("Are you sure you want to delete all detection records?")) {
+            return;
+        }
+        try {
+            const response = await fetch('/history/clear', { method: 'DELETE' });
+            if (response.ok) {
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert("Failed to clear history: " + (error.message || "Unknown error"));
+            }
+        } catch (err) {
+            alert("Network error: " + err.message);
+        }
+    }
+</script>
+</body>
+</html>
