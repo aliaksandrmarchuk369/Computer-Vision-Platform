@@ -1,4 +1,4 @@
-# CV Detection Platform
+# Computer Vision Platform
 
 FastAPI + ONNX Runtime + MySQL based object detection API.
 
