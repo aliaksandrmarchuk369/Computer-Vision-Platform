@@ -4,17 +4,24 @@ import os
 import tempfile
 import time
 from contextlib import asynccontextmanager
-from typing import List, Optional
 
 import cv2
 import mlflow
 from fastapi import FastAPI, File, Query, Request, UploadFile
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 from starlette.templating import _TemplateResponse
 
 from src.bounding_box_visualization import BoundingBoxVisualization
-from src.db import create_table, ensure_database, get_all_detections, insert_detection
+from src.db import (
+    clear_all_detections,
+    create_table,
+    ensure_database,
+    get_gallery_detections,
+    get_history_detections,
+    insert_detection,
+)
 from src.image_processor import ImageProcessor
 from src.yolo11 import YOLO11
 
@@ -36,6 +43,9 @@ app = FastAPI(lifespan=lifespan)
 # Jinja2 setup
 env = Environment(loader=FileSystemLoader("templates"), autoescape=True, cache_size=0)
 
+# Mount the static directory
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 def template_response(name: str, context: dict):
     template = env.get_template(name)
@@ -49,24 +59,28 @@ async def home(request: Request):
 
 @app.get("/history")
 async def history(request: Request):
-    records = get_all_detections()
+    records = get_history_detections()
     return template_response("history.html", {"request": request, "records": records})
 
 
 @app.delete("/history/clear")
 async def clear_history():
-    from src.db import clear_all_detections
-
     clear_all_detections()
     return JSONResponse(content={"message": "History cleared successfully"})
 
 
+@app.get("/gallery")
+async def gallery(request: Request):
+    records = get_gallery_detections()
+    return template_response("gallery.html", {"request": request, "records": records})
+
+
 @app.post("/detect")
 async def detect(
-    files: List[UploadFile] = File(...),
-    conf_threshold: float = Query(0.5, ge=0.0, le=1.0),
-    nms_threshold: float = Query(0.5, ge=0.0, le=1.0),
-    filter_classes: Optional[str] = Query(None, description="Comma-separated class names or IDs"),
+    files: list[UploadFile] = File(...),
+    conf_threshold: float = Query(0.3, ge=0.0, le=1.0),
+    nms_threshold: float = Query(0.45, ge=0.0, le=1.0),
+    filter_classes: str | None = Query(None, description="Comma-separated class names or IDs"),
 ):
     # Parse filter_classes (supports both names and IDs)
     filter_list = None
@@ -129,7 +143,7 @@ async def detect(
                     {"filename": file.filename, "image": image_base64, "detections": boxes_data}
                 )
 
-                # Insert into MySQL
+                # Insert into MySQL with annotated image
                 insert_detection(
                     filename=file.filename,
                     num_detections=len(boxes_data),
@@ -137,6 +151,7 @@ async def detect(
                     conf_thr=conf_threshold,
                     nms_thr=nms_threshold,
                     filter_cls=filter_classes or "",
+                    annotated_image=image_base64,
                 )
 
             mlflow.log_metric("total_detections", total_detections)

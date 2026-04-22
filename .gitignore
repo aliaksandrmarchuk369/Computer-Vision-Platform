@@ -1,15 +1,9 @@
+__pycache__
 # Virtual environment
 .venv
-
 # Python package metadata (setuptools)
 *.egg-info
-
 # Folder with ONNX and .pt model files created in result of export.py script
 models
-
-__pycache__
-
-notes.md
-
 # Folder with MLflow runs
 mlruns

@@ -13,7 +13,7 @@ class YOLO11:
         model_path: str = "models/yolo11n.onnx",
         class_names_path: str = "src/yolo11_class_names.json",
         conf_threshold: float = 0.3,
-        nms_threshold: float = 0.5,
+        nms_threshold: float = 0.45,
         filter_classes: list = None,
     ):
         self.backend = ONNXBackend(model_path)

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detection Gallery</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+<div class="container">
+    <h1>Detection Gallery</h1>
+    <div>
+        <a href="/" class="back-link">← Back to detection page</a>
+        <a href="/history" style="margin-left: 10px;">📋 View History</a>
+    </div>
+
+    {% if records %}
+    <div class="gallery-grid">
+        {% for record in records %}
+        <div class="gallery-item">
+            <img src="data:image/jpeg;base64,{{ record.annotated_image }}" alt="{{ record.filename }}">
+            <div class="filename">{{ record.filename }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No images have been processed yet. Go to the <a href="/">detection page</a> to upload images.</p>
+    {% endif %}
+</div>
+</body>
+</html>

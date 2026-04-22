@@ -23,9 +23,10 @@ def ensure_database():
 def create_table():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS detections")
     cursor.execute(
         """
-        CREATE TABLE IF NOT EXISTS detections (
+        CREATE TABLE detections (
             id INT AUTO_INCREMENT PRIMARY KEY,
             filename VARCHAR(255),
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -33,7 +34,8 @@ def create_table():
             detections_json JSON,
             conf_threshold FLOAT,
             nms_threshold FLOAT,
-            filter_classes VARCHAR(255)
+            filter_classes VARCHAR(255),
+            annotated_image LONGTEXT
         )
     """
     )
@@ -49,26 +51,49 @@ def insert_detection(
     conf_thr: float,
     nms_thr: float,
     filter_cls: str,
+    annotated_image: str,  # base64 string
 ):
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO detections (filename, num_detections, detections_json, conf_threshold, nms_threshold, filter_classes)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO detections (filename, num_detections, detections_json, conf_threshold, nms_threshold, filter_classes, annotated_image)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     """,
-        (filename, num_detections, detections_json, conf_thr, nms_thr, filter_cls),
+        (filename, num_detections, detections_json, conf_thr, nms_thr, filter_cls, annotated_image),
     )
     conn.commit()
     cursor.close()
     conn.close()
 
 
-def get_all_detections():
+def get_history_detections():
+    """For history page: returns all columns except annotated_image."""
     conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor(dictionary=True)  # returns rows as dicts
+    cursor = conn.cursor(dictionary=True)
     cursor.execute(
-        "SELECT id, filename, timestamp, num_detections, conf_threshold, nms_threshold, filter_classes FROM detections ORDER BY timestamp DESC"
+        """
+        SELECT id, filename, timestamp, num_detections, conf_threshold, nms_threshold, filter_classes
+        FROM detections
+        ORDER BY id DESC
+    """
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return rows
+
+
+def get_gallery_detections():
+    """For gallery page: returns only id, filename, timestamp, annotated_image (non‑empty)."""
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        """
+        SELECT filename, annotated_image
+        FROM detections
+        ORDER BY filename DESC
+    """
     )
     rows = cursor.fetchall()
     cursor.close()
@@ -79,7 +104,7 @@ def get_all_detections():
 def clear_all_detections():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM detections")
+    cursor.execute("TRUNCATE TABLE detections")
     conn.commit()
     cursor.close()
     conn.close()

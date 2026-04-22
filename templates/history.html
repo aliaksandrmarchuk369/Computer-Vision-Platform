@@ -2,26 +2,7 @@
 <html>
 <head>
     <title>Detection History</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        a { text-decoration: none; color: #007bff; }
-        .back-link { display: inline-block; margin-bottom: 20px; }
-        .clear-btn {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .clear-btn:hover { background: #c82333; }
-    </style>
+    <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
 <div class="container">
@@ -51,7 +32,7 @@
                 <td>{{ record.num_detections }}</td>
                 <td>{{ record.conf_threshold }}</td>
                 <td>{{ record.nms_threshold }}</td>
-                <td>{{ record.filter_classes or 'All' }}</td>
+                <td>{{ record.filter_classes or 'No filtering' }}</td>
             </tr>
             {% endfor %}
         </tbody>

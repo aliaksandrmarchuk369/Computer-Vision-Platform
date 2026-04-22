@@ -2,87 +2,11 @@
 <html>
 <head>
     <title>Computer Vision Platform - Object Detection</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative; }
-        h1 { text-align: center; }
-        .history-link {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            padding: 8px 16px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        .history-link:hover { background: #218838; }
-        .upload-area {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            width: fit-content;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .file-input-wrapper {
-            margin-bottom: 10px;
-        }
-        .params {
-            background: #e9ecef;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: auto;
-            min-width: 320px;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .param-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-        }
-        .param-row label {
-            font-weight: bold;
-            min-width: 140px;
-        }
-        .param-row input {
-            flex: 1;
-            padding: 5px;
-        }
-        /* Make filter input wider */
-        .param-row:last-child input {
-            flex: 2;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        button:hover { background: #0056b3; }
-        .result-item { margin-top: 30px; border-top: 2px solid #ddd; padding-top: 20px; }
-        .result-row { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
-        .image-box { flex: 1; min-width: 200px; }
-        .image-box img { max-width: 100%; border: 1px solid #ccc; border-radius: 5px; }
-        .detections-box { flex: 1; background: #222; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto; }
-        .detections-box h3 { margin-top: 0; color: #0f0; text-align: center; }
-        pre { margin: 0; color: #0f0; white-space: pre-wrap; }
-    </style>
+    <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
 <div class="container">
+    <a href="/gallery" class="gallery-link">🖼️ Gallery</a>
     <a href="/history" class="history-link">📜 View History</a>
     <h1>YOLO11 Object Detection</h1>
     <div class="upload-area">
@@ -95,11 +19,11 @@
     <div class="params">
         <div class="param-row">
             <label>Confidence threshold:</label>
-            <input type="number" id="conf" step="0.05" value="0.5" min="0" max="1">
+            <input type="number" id="conf" step="0.05" value="0.3" min="0" max="1">
         </div>
         <div class="param-row">
             <label>NMS threshold:</label>
-            <input type="number" id="nms" step="0.05" value="0.5" min="0" max="1">
+            <input type="number" id="nms" step="0.05" value="0.45" min="0" max="1">
         </div>
         <div class="param-row">
             <label>Filter classes (names):</label>

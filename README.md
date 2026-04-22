@@ -3,8 +3,8 @@
 FastAPI + ONNX Runtime + MySQL based object detection API.
 
 ## Prerequisites:
-# - MySQL (installed and running)
-# - Python 3.10+
+- MySQL (installed and running)
+- Python 3.10+
 
 ## Setup Instructions
 
@@ -41,5 +41,20 @@ python scripts/export.py
 uvicorn main:app --reload
 ```
 
+If you will get this error 
+mysql.connector.errors.DatabaseError: 2003 (HY000): Can't connect to MySQL server on 'localhost:3306' (10061) -> then you need to run following command:
+```bash
+sc query state= all | findstr /i "mysql"
+net start MySQL80 # (Replace MySQL80 with your actual service name)
+```
+
+### 6. To observe logged MLflow runs proceed with following command:
+```bash
+mlflow ui --backend-store-uri ./mlruns # Evaluation Runs
+```
+
 ## Demo
-![Detection results](screenshots/demo.png)
+![Home page](screenshots/home.png)
+![Gallery page](screenshots/gallery.png)
+![History page](screenshots/history.png)
+![MLflow Evaluation run](screenshots/mlflow.png)
