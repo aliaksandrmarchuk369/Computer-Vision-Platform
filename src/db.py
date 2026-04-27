@@ -23,19 +23,31 @@ def ensure_database():
 def create_table():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
+    cursor.execute("DROP TABLE IF EXISTS detection_items")
     cursor.execute("DROP TABLE IF EXISTS detections")
     cursor.execute(
         """
         CREATE TABLE detections (
             id INT AUTO_INCREMENT PRIMARY KEY,
             filename VARCHAR(255),
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            num_detections INT,
-            detections_json JSON,
-            conf_threshold FLOAT,
-            nms_threshold FLOAT,
             filter_classes VARCHAR(255),
             annotated_image LONGTEXT
+        )
+    """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE detection_items (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            detection_id INT NOT NULL,
+            x1 FLOAT,
+            y1 FLOAT,
+            x2 FLOAT,
+            y2 FLOAT,
+            class_id INT,
+            class_name VARCHAR(255),
+            confidence FLOAT,
+            FOREIGN KEY (detection_id) REFERENCES detections(id) ON DELETE CASCADE
         )
     """
     )
@@ -46,21 +58,43 @@ def create_table():
 
 def insert_detection(
     filename: str,
-    num_detections: int,
-    detections_json: str,
-    conf_thr: float,
-    nms_thr: float,
     filter_cls: str,
-    annotated_image: str,  # base64 string
+    annotated_image: str,
+) -> int:
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO detections (filename, filter_classes, annotated_image)
+        VALUES (%s, %s, %s)
+    """,
+        (filename, filter_cls, annotated_image),
+    )
+    detection_id = cursor.lastrowid
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return detection_id
+
+
+def insert_detection_item(
+    detection_id: int,
+    x1: float,
+    y1: float,
+    x2: float,
+    y2: float,
+    class_id: int,
+    class_name: str,
+    confidence: float,
 ):
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO detections (filename, num_detections, detections_json, conf_threshold, nms_threshold, filter_classes, annotated_image)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO detection_items (detection_id, x1, y1, x2, y2, class_id, class_name, confidence)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """,
-        (filename, num_detections, detections_json, conf_thr, nms_thr, filter_cls, annotated_image),
+        (detection_id, x1, y1, x2, y2, class_id, class_name, confidence),
     )
     conn.commit()
     cursor.close()
@@ -68,14 +102,16 @@ def insert_detection(
 
 
 def get_history_detections():
-    """For history page: returns all columns except annotated_image."""
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         """
-        SELECT id, filename, timestamp, num_detections, conf_threshold, nms_threshold, filter_classes
-        FROM detections
-        ORDER BY id DESC
+        SELECT d.id AS detection_id, d.filename, d.filter_classes,
+               di.id AS box_id,
+               di.x1, di.y1, di.x2, di.y2, di.class_id, di.class_name, di.confidence
+        FROM detections d
+        LEFT JOIN detection_items di ON d.id = di.detection_id
+        ORDER BY d.id DESC, di.id DESC
     """
     )
     rows = cursor.fetchall()
@@ -104,7 +140,10 @@ def get_gallery_detections():
 def clear_all_detections():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+    cursor.execute("TRUNCATE TABLE detection_items")
     cursor.execute("TRUNCATE TABLE detections")
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
     conn.commit()
     cursor.close()
     conn.close()

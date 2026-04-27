@@ -54,7 +54,15 @@ mlflow ui --backend-store-uri ./mlruns # Evaluation Runs
 ```
 
 ## Demo
-![Home page](screenshots/home.png)
-![Gallery page](screenshots/gallery.png)
-![History page](screenshots/history.png)
+### Home page
+![Home page](screenshots/home_demo.png)
+### Gallery page
+![Gallery page](screenshots/gallery_demo.png)
+### History page
+![History page](screenshots/history_demo.png)
+### MLflow Evaluation run
 ![MLflow Evaluation run](screenshots/mlflow.png)
+### Home page with lower confidence threshold and without classes filtering
+![Home page](screenshots/home_demo_no_filtering.png)
+### Home page with lower confidence threshold and with classes filtering
+![Home page](screenshots/home_demo_with_filtering.png)

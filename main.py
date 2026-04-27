@@ -21,6 +21,7 @@ from src.db import (
     get_gallery_detections,
     get_history_detections,
     insert_detection,
+    insert_detection_item,
 )
 from src.image_processor import ImageProcessor
 from src.yolo11 import YOLO11
@@ -99,14 +100,15 @@ async def detect(
             temp_paths.append(tmp.name)
 
     try:
-        # Start MLflow run
-        with mlflow.start_run(run_name="detection"):
-            # Log parameters
+        # Create a unique run name for this detection request
+        run_name = f"detection_{int(time.time() * 1000)}_{hash(files[0].filename) % 10000}"
+        with mlflow.start_run(run_name=run_name):
+            # Log input parameters
             mlflow.log_params(
                 {
                     "conf_threshold": conf_threshold,
                     "nms_threshold": nms_threshold,
-                    "filter_classes": filter_classes or "all",
+                    "filter_classes": filter_classes or "No filtering",
                 }
             )
 
@@ -143,18 +145,42 @@ async def detect(
                     {"filename": file.filename, "image": image_base64, "detections": boxes_data}
                 )
 
-                # Insert into MySQL with annotated image
-                insert_detection(
+                # Insert parent record
+                detection_id = insert_detection(
                     filename=file.filename,
-                    num_detections=len(boxes_data),
-                    detections_json=json.dumps(boxes_data),
-                    conf_thr=conf_threshold,
-                    nms_thr=nms_threshold,
                     filter_cls=filter_classes or "",
                     annotated_image=image_base64,
                 )
 
+                # Insert each bounding box and log to MLflow
+                for idx, box in enumerate(boxes_data):
+                    x1, y1, x2, y2, class_id, confidence = box
+                    class_name = model.class_names.get(int(class_id), f"unknown_{int(class_id)}")
+                    insert_detection_item(
+                        detection_id=detection_id,
+                        x1=x1,
+                        y1=y1,
+                        x2=x2,
+                        y2=y2,
+                        class_id=int(class_id),
+                        class_name=class_name,
+                        confidence=float(confidence),
+                    )
+                    # Log box details as a JSON parameter
+                    box_dict = {
+                        "x1": x1,
+                        "y1": y1,
+                        "x2": x2,
+                        "y2": y2,
+                        "class_id": int(class_id),
+                        "class_name": class_name,
+                        "confidence": confidence,
+                    }
+                    mlflow.log_param(f"detection_{detection_id}_{idx}", json.dumps(box_dict))
+
+            # Log total number of detections across all uploaded images
             mlflow.log_metric("total_detections", total_detections)
+
             return JSONResponse(content={"results": results})
 
     finally:

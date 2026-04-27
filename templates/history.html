@@ -11,35 +11,40 @@
         <a href="/" class="back-link">← Back to detection page</a>
         <button class="clear-btn" onclick="clearHistory()">🗑️ Clear History</button>
     </div>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Filename</th>
-                <th>Timestamp</th>
-                <th>Detections</th>
-                <th>Confidence</th>
-                <th>NMS</th>
-                <th>Filter Classes</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in records %}
-            <tr>
-                <td>{{ record.id }}</td>
-                <td>{{ record.filename }}</td>
-                <td>{{ record.timestamp }}</td>
-                <td>{{ record.num_detections }}</td>
-                <td>{{ record.conf_threshold }}</td>
-                <td>{{ record.nms_threshold }}</td>
-                <td>{{ record.filter_classes or 'No filtering' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% if not records %}
-    <p>No detection records found.</p>
-    {% endif %}
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Box ID</th>
+                    <th>Filename</th>
+                    <th>Bounding Box (x1, y1, x2, y2)</th>
+                    <th>Class Name</th>
+                    <th>Confidence</th>
+                    <th>Filter Classes Applied</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in records %}
+                    {% if record.x1 is not none %}
+                    <tr>
+                        <td>{{ record.box_id }}</td>
+                        <td>{{ record.filename }}</td>
+                        <td>({{ "%.1f"|format(record.x1) }}, {{ "%.1f"|format(record.y1) }}, {{ "%.1f"|format(record.x2) }}, {{ "%.1f"|format(record.y2) }})</td>
+                        <td>{{ record.class_name }}</td>
+                        <td>{{ "%.2f"|format(record.confidence) }}</td>
+                        <td>{{ record.filter_classes or 'No filtering' }}</td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                {% if not records or records|selectattr("x1", "defined")|list|length == 0 %}
+                <tr>
+                    <td colspan="7">No detection records found.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
